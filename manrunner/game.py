@@ -15,14 +15,14 @@ class Player(pygame.sprite.Sprite):
 		self.rect = self.image.get_rect(midbottom = (80,300))
 		self.gravity = 0
 
-		self.jump_sound = pygame.mixer.Sound('audio/jump.mp3')
-		self.jump_sound.set_volume(0.5)
+		# self.jump_sound = pygame.mixer.Sound('audio/jump.mp3')
+		# self.jump_sound.set_volume(0.5)
 
 	def player_input(self):
 		keys = pygame.key.get_pressed()
 		if keys[pygame.K_SPACE] and self.rect.bottom >= 300:
 			self.gravity = -20
-			self.jump_sound.play()
+			# self.jump_sound.play()
 
 	def apply_gravity(self):
 		self.gravity += 1
@@ -76,7 +76,6 @@ class Obstacle(pygame.sprite.Sprite):
 		if self.rect.x <= -100: 
 			self.kill()
 
-
 def display_score():
 	current_time = int(pygame.time.get_ticks() / 1000) - start_time
 	score_surf = test_font.render(f'Score: {current_time}',False,(64,64,64))
@@ -127,8 +126,8 @@ test_font = pygame.font.Font('font/Pixeltype.ttf', 50)
 game_active = False
 start_time = 0
 score = 0
-bg_music = pygame.mixer.Sound('audio/music.wav')
-bg_music.play(loops = -1)
+# bg_music = pygame.mixer.Sound('audio/music.wav')
+# bg_music.play(loops = -1)
 
 #Groups
 player = pygame.sprite.GroupSingle()
@@ -227,7 +226,6 @@ while True:
 				if fly_frame_index == 0: fly_frame_index = 1
 				else: fly_frame_index = 0
 				fly_surf = fly_frames[fly_frame_index] 
-
 
 	if game_active:
 		screen.blit(sky_surface,(0,0))
