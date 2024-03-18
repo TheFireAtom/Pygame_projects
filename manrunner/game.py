@@ -157,7 +157,6 @@ fly_surf = fly_frames[fly_frame_index]
 
 obstacle_rect_list = []
 
-
 player_walk_1 = pygame.image.load('graphics/player/player_walk_1.png').convert_alpha()
 player_walk_2 = pygame.image.load('graphics/player/player_walk_2.png').convert_alpha()
 player_walk = [player_walk_1,player_walk_2]
