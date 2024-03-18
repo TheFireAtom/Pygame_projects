@@ -76,29 +76,46 @@ class Enemy(pygame.sprite.Sprite):
             self.frames = [goblin_1_surf, goblin_2_surf, goblin_3_surf, goblin_4_surf]
             y_pos = 380
         else:
-            bat_1_surf = pygame.image.load("images/goblin/bat1.png").convert_alpha()
-            bat_2_surf = pygame.image.load("images/goblin/bat2.png").convert_alpha()
-            bat_3_surf = pygame.image.load("images/goblin/bat3.png").convert_alpha()
-            bat_4_surf = pygame.image.load("images/goblin/bat4.png").convert_alpha()
+            bat_1_surf = pygame.image.load("images/bat/bat1.png").convert_alpha()
+            bat_2_surf = pygame.image.load("images/bat/bat2.png").convert_alpha()
+            bat_3_surf = pygame.image.load("images/bat/bat3.png").convert_alpha()
+            bat_4_surf = pygame.image.load("images/bat/bat4.png").convert_alpha()
             self.frames = [bat_1_surf, bat_2_surf, bat_3_surf, bat_4_surf]
-            y_pos = 340
+            y_pos = 330
         
         self.animation_index = 0
         self.image = self.frames[self.animation_index]
         self.rect = self.image.get_rect(midbottom = (randint(900, 1100), y_pos))
+        self.type = type
 
     def animation_state(self):
         self.animation_index += 0.1
-        if self.image >= len(self.frames): self.image = 0
+        if self.animation_index >= len(self.frames): self.animation_index = 0
         self.image = self.frames[int(self.animation_index)]
-    
+
+    def bat_position(self):
+        if self.type == "bat":
+            bat_bool = True
+            last_bat_spawn_type = pygame.time.get_ticks()
+            move_time = 1000
+            now = pygame.time.get_ticks()
+            if now - last_bat_spawn_type > move_time:
+                if bat_bool:
+                    self.rect.y -= 2
+                    bat_bool = False
+                elif bat_bool == False:
+                    self.rect.y += 1
+                    bat_bool = True
+                last_bat_spawn_type = now
+                
     def update(self):
         self.animation_state()
-        self.rect.x -= 6
+        self.bat_position()
+        self.rect.x -= 3
         self.destroy()
 
-    def destrok(self):
-        if self.rect <= -100:
+    def destroy(self):
+        if self.rect.x <= -100:
             self.kill()         
 
 # functions  
@@ -136,21 +153,22 @@ def draw_game():
     # drawing every image
     screen.blit(cave_background_surf, (0, 0))
     screen.blit(stone_ground_surf, (0, 300))
-    mage.draw(screen)
-    mage.update()
+    all_sprites.draw(screen)
+    all_sprites.update()
+    
     # screen.blit(mage_1_surf, mage_1_rect)
     # screen.blit(goblin_1_surf, goblin_1_rect)
     # screen.blit(bat_1_surf, bat_1_rect)
 
 def enemies_spawn():
-    spawn_delay = 3000
-    last_spawn_time = pygame.time.get_ticks()
+    global last_spawn_time, spawn_delay
 
     now = pygame.time.get_ticks()
     if now - last_spawn_time > spawn_delay:
-        enemy = Enemy()
-
-
+        spawn_chance = enemies_types[randint(0, 3)]
+        new_enemy = Enemy(spawn_chance)
+        all_sprites.add(new_enemy)
+        last_spawn_time = now
 
 # colors
 WHITE = (255, 255, 255)
@@ -172,19 +190,26 @@ main_font = pygame.font.Font("fonts/VisitorRus.ttf", 60)
 mage_1_surf = pygame.image.load("images/mage/mage1.png").convert_alpha()
 
 # enemies
-goblin_1_surf = pygame.image.load("images/goblin/goblin.png").convert_alpha()
-bat_1_surf = pygame.image.load("images/bat/bat.png").convert_alpha()
+goblin_1_surf = pygame.image.load("images/goblin/goblin1.png").convert_alpha()
+bat_1_surf = pygame.image.load("images/bat/bat1.png").convert_alpha()
 
-#rectangles creation
+# rectangles creation
 mage_1_rect = mage_1_surf.get_rect()
 goblin_1_rect = goblin_1_surf.get_rect()
 bat_1_rect = bat_1_surf.get_rect()
 
+# enemies randomizer
+enemies_types = ["goblin", "bat", "goblin", "bat"]
+spawn_chance = enemies_types[randint(0, 3)]
+spawn_delay = 3000
+last_spawn_time = pygame.time.get_ticks()
+
 # sprites group
 mage = Mage()
-enemy = Enemy()
+enemy = Enemy(spawn_chance)
 all_sprites = pygame.sprite.Group()
-all_sprites.add(mage, enemy)
+all_sprites.add(mage)
+# enemies = pygame.sprite.Group()
 
 # running game
 while True:
@@ -208,6 +233,7 @@ while True:
         #         mage.move_right()
             
     if game_active:
+        enemies_spawn()
         draw_game()
     else:
         game_over_screen()
