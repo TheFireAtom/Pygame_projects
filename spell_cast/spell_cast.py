@@ -118,6 +118,25 @@ class Enemy(pygame.sprite.Sprite):
         if self.rect.x <= -100:
             self.kill()         
 
+class Projectile(pygame.sprite.Sprite):
+    def __init__(self, type):
+        super().__init__()
+
+        if type == "fireball":
+            fireball_surf_1 = pygame.image.load("images/fireball/red_fireball1.png")
+            fireball_surf_2 = pygame.image.load("images/fireball/red_fireball2.png")
+            fireball_surf_3 = pygame.image.load("images/fireball/red_fireball3.png")
+            fireball_surf_4 = pygame.image.load("images/fireball/red_fireball4.png")
+            self.frames[fireball_surf_1, fireball_surf_2, fireball_surf_3, fireball_surf_4]
+        if type == "iceball":
+            iceball_surf_1 = pygame.image.load("images/fireball/red_iceball1.png")
+            iceball_surf_2 = pygame.image.load("images/fireball/red_iceball2.png")
+            iceball_surf_3 = pygame.image.load("images/fireball/red_iceball3.png")
+            iceball_surf_4 = pygame.image.load("images/fireball/red_iceball4.png")
+            self.frames = [iceball_surf_1, iceball_surf_2, iceball_surf_3, iceball_surf_4]
+            
+            
+
 # functions  
 def game_over_screen():
     # mage model transformation and creating a rectangle for it 
