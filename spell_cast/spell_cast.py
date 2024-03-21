@@ -21,7 +21,9 @@ class Mage(pygame.sprite.Sprite):
         self.image = self.mage_walk[self.current_frame]
         self.last_update = pygame.time.get_ticks()
         self.player_speed = 3
-        self.direction = True
+        self.direction = 1
+        self.last_fire_time = 0
+        self.fire_delay = 3000
 
         # mage rectangle
         self.rect = self.image.get_rect(midbottom = (400, 400))
@@ -32,11 +34,13 @@ class Mage(pygame.sprite.Sprite):
     def player_input(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
-            self.direction = True
+            self.direction = -1
             self.rect.x -= self.player_speed
         elif keys[pygame.K_d]:
-            self.direction = False
+            self.direction = 1
             self.rect.x += self.player_speed
+        elif keys[pygame.K_SPACE]:
+            self.fire_projectile()
 
     # def move_left(self):
     #     self.rect.x -= self.player_speed
@@ -51,11 +55,22 @@ class Mage(pygame.sprite.Sprite):
             self.image = self.mage_walk[self.current_frame]       
             
     def draw(self, screen):
-        if self.direction == True:
+        if self.direction == -1:
             screen.blit(self.image, self.rect)     
-        elif self.direction == False:
+        elif self.direction == 1:
             self.image = pygame.transform.flip(self.mage_walk[self.current_frame], True, False)
             screen.blit(self.image, self.rect)   
+
+    def fire_projectile(self):
+        current_time = pygame.time.get_ticks()
+        
+        if current_time - self.last_fire_time > self.fire_delay:
+
+            projectile = Projectile("fireball", self.rect.centerx, self.rect.centery, self.direction)
+            all_sprites.add(projectile)
+            projectiles.add(projectile)
+
+            self.last_fire_time = current_time
 
     def update(self):
         self.player_input()
@@ -81,7 +96,7 @@ class Enemy(pygame.sprite.Sprite):
             bat_3_surf = pygame.image.load("images/bat/bat3.png").convert_alpha()
             bat_4_surf = pygame.image.load("images/bat/bat4.png").convert_alpha()
             self.frames = [bat_1_surf, bat_2_surf, bat_3_surf, bat_4_surf]
-            y_pos = 330
+            y_pos = 300
         
         self.animation_index = 0
         self.image = self.frames[self.animation_index]
@@ -119,7 +134,7 @@ class Enemy(pygame.sprite.Sprite):
             self.kill()         
 
 class Projectile(pygame.sprite.Sprite):
-    def __init__(self, type):
+    def __init__(self, type, x, y, direction):
         super().__init__()
 
         if type == "fireball":
@@ -127,16 +142,43 @@ class Projectile(pygame.sprite.Sprite):
             fireball_surf_2 = pygame.image.load("images/fireball/red_fireball2.png")
             fireball_surf_3 = pygame.image.load("images/fireball/red_fireball3.png")
             fireball_surf_4 = pygame.image.load("images/fireball/red_fireball4.png")
-            self.frames[fireball_surf_1, fireball_surf_2, fireball_surf_3, fireball_surf_4]
+            self.frames = [fireball_surf_1, fireball_surf_2, fireball_surf_3, fireball_surf_4]
         if type == "iceball":
             iceball_surf_1 = pygame.image.load("images/fireball/red_iceball1.png")
             iceball_surf_2 = pygame.image.load("images/fireball/red_iceball2.png")
             iceball_surf_3 = pygame.image.load("images/fireball/red_iceball3.png")
             iceball_surf_4 = pygame.image.load("images/fireball/red_iceball4.png")
             self.frames = [iceball_surf_1, iceball_surf_2, iceball_surf_3, iceball_surf_4]
-            
-            
 
+        self.animation_index = 0
+        self.image = self.frames[self.animation_index]
+        self.rect = self.image.get_rect()
+        self.prev_x_position = x
+        self.rect.center = (x, y)
+        self.direction = direction
+        self.projectile_speed = 3
+
+    def animation_state(self):
+        self.animation_index += 0.1
+        if self.animation_index >= len(self.frames): 
+            self.animation_index = 4
+        elif self.animation_index < len(self.frames):
+            self.image = self.frames[int(self.animation_index)]
+
+    def projectile_direction(self):
+        self.rect.x += self.projectile_speed * self.direction       
+
+    def destroy(self):
+        if self.rect.x <= -100 or self.rect.x >= 800:
+            self.kill()
+    
+    def update(self):
+        self.animation_state()
+        self.projectile_direction()
+        self.destroy()
+        
+        
+             
 # functions  
 def game_over_screen():
     # mage model transformation and creating a rectangle for it 
@@ -228,6 +270,7 @@ mage = Mage()
 enemy = Enemy(spawn_chance)
 all_sprites = pygame.sprite.Group()
 all_sprites.add(mage)
+projectiles = pygame.sprite.Group()
 # enemies = pygame.sprite.Group()
 
 # running game
