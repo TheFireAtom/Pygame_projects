@@ -12,21 +12,26 @@ class Mage(pygame.sprite.Sprite):
         mage_walk_2 = pygame.image.load("images/mage/mage2.png").convert_alpha()
         mage_walk_3 = pygame.image.load("images/mage/mage3.png").convert_alpha()
         mage_walk_4 = pygame.image.load("images/mage/mage4.png").convert_alpha()
+        mage_jump = pygame.image.load("images/mage/mage5.png").convert_alpha()
 
         # mage variables
         # variables for mage animation
         self.current_frame = 0
         self.animation_speed = 100
         self.mage_walk = [mage_walk_1, mage_walk_2, mage_walk_3, mage_walk_4]
+        self.mage_jump = mage_jump
         self.image = self.mage_walk[self.current_frame]
         self.last_update = pygame.time.get_ticks()
         self.player_speed = 3
         self.direction = 1
         self.last_fire_time = 0
         self.fire_delay = 3000
+        self.gravity = 0
+        self.bottom_pos = 330
 
         # mage rectangle
-        self.rect = self.image.get_rect(midbottom = (400, 400))
+        # self.rect = pygame.Rect(300, 300, 48, 100)
+        self.rect = pygame.Rect(300, 300, 60, 60)
         self.x_position_old = self.rect.x
         self.x_position_new = self.rect.x
     
@@ -39,8 +44,10 @@ class Mage(pygame.sprite.Sprite):
         elif keys[pygame.K_d]:
             self.direction = 1
             self.rect.x += self.player_speed
-        elif keys[pygame.K_SPACE]:
+        if keys[pygame.K_SPACE]:
             self.fire_projectile()
+        if keys[pygame.K_w] and self.rect.bottom >= self.bottom_pos:
+            self.gravity = -20
 
     # def move_left(self):
     #     self.rect.x -= self.player_speed
@@ -49,10 +56,15 @@ class Mage(pygame.sprite.Sprite):
 
     def animation_state(self):
         now = pygame.time.get_ticks()
-        if (now - self.last_update > self.animation_speed):
-            self.last_update = now
-            self.current_frame = (self.current_frame + 1) % (len(self.mage_walk))
-            self.image = self.mage_walk[self.current_frame]       
+        on_ground = self.rect.y > 100
+
+        if on_ground:
+            if (now - self.last_update > self.animation_speed):
+                self.last_update = now
+                self.current_frame = (self.current_frame + 1) % (len(self.mage_walk))
+                self.image = self.mage_walk[self.current_frame]       
+        else:
+            self.image = self.mage_walk[0]
             
     def draw(self, screen):
         if self.direction == -1:
@@ -72,11 +84,16 @@ class Mage(pygame.sprite.Sprite):
 
             self.last_fire_time = current_time
 
+    def apply_gravity(self):
+        self.gravity += 1
+        self.rect.y += self.gravity
+        if self.rect.bottom >= self.bottom_pos:
+            self.rect.bottom = self.bottom_pos
+
     def update(self):
         self.player_input()
         self.animation_state()
-        # self.move_left()
-        # self.move_right()
+        self.apply_gravity()
         self.draw(screen)
 
 class Enemy(pygame.sprite.Sprite):
@@ -89,18 +106,21 @@ class Enemy(pygame.sprite.Sprite):
             goblin_3_surf = pygame.image.load("images/goblin/goblin3.png").convert_alpha()
             goblin_4_surf = pygame.image.load("images/goblin/goblin4.png").convert_alpha()
             self.frames = [goblin_1_surf, goblin_2_surf, goblin_3_surf, goblin_4_surf]
-            y_pos = 380
+            y_pos = 260
+            self.rect = pygame.Rect(900, y_pos, 80, 100)
         else:
             bat_1_surf = pygame.image.load("images/bat/bat1.png").convert_alpha()
             bat_2_surf = pygame.image.load("images/bat/bat2.png").convert_alpha()
             bat_3_surf = pygame.image.load("images/bat/bat3.png").convert_alpha()
             bat_4_surf = pygame.image.load("images/bat/bat4.png").convert_alpha()
             self.frames = [bat_1_surf, bat_2_surf, bat_3_surf, bat_4_surf]
-            y_pos = 300
+            y_pos = 160
+            # self.rect = pygame.Rect(900, y_pos, 118, 76)
+            self.rect = pygame.Rect(900, y_pos, 90, 76)
         
         self.animation_index = 0
         self.image = self.frames[self.animation_index]
-        self.rect = self.image.get_rect(midbottom = (randint(900, 1100), y_pos))
+        # self.rect = self.image.get_rect(midbottom = (randint(900, 1100), y_pos))
         self.type = type
 
     def animation_state(self):
@@ -152,7 +172,7 @@ class Projectile(pygame.sprite.Sprite):
 
         self.animation_index = 0
         self.image = self.frames[self.animation_index]
-        self.rect = self.image.get_rect()
+        self.rect = pygame.Rect(x, y, 32, 48)
         self.prev_x_position = x
         self.rect.center = (x, y)
         self.direction = direction
@@ -175,9 +195,7 @@ class Projectile(pygame.sprite.Sprite):
     def update(self):
         self.animation_state()
         self.projectile_direction()
-        self.destroy()
-        
-        
+        self.destroy() 
              
 # functions  
 def game_over_screen():
@@ -208,8 +226,8 @@ def draw_game():
     # drawing screen and positioning images
     
     # mage_1_rect.center = (400, 350)
-    goblin_1_rect.center = (150, 330)
-    bat_1_rect.center = (650, 300)
+    # goblin_1_rect.center = (150, 330)
+    # bat_1_rect.center = (650, 300)
 
     # drawing every image
     screen.blit(cave_background_surf, (0, 0))
@@ -229,8 +247,38 @@ def enemies_spawn():
         spawn_chance = enemies_types[randint(0, 3)]
         new_enemy = Enemy(spawn_chance)
         all_sprites.add(new_enemy)
+        enemies.add(new_enemy)
         last_spawn_time = now
 
+def projectile_collision():
+    for projectile in projectiles:
+        collided_enemies = pygame.sprite.spritecollide(projectile, enemies, True)
+        if collided_enemies:
+            projectile.kill()
+            for enemy in collided_enemies:
+                enemy.kill()
+
+def player_collision():
+    global game_active
+
+    enemy_collide = pygame.sprite.spritecollide(mage, enemies, False)
+
+    if enemy_collide:
+        game_active = False
+
+def restart_game():
+    cave_background_surf = pygame.image.load("images/cave_background/cave_background.png").convert_alpha()
+    stone_ground_surf = pygame.image.load("images/stone_ground/stone_ground.png").convert_alpha()
+
+    all_sprites.empty()
+    enemies.empty()
+    projectiles.empty()
+
+    screen.blit(cave_background_surf, (0, 0))
+    screen.blit(stone_ground_surf, (0, 300))
+    all_sprites.draw(screen)
+    all_sprites.update()
+    
 # colors
 WHITE = (255, 255, 255)
 BLACK = (0,0,0)
@@ -270,6 +318,8 @@ mage = Mage()
 enemy = Enemy(spawn_chance)
 all_sprites = pygame.sprite.Group()
 all_sprites.add(mage)
+enemies = pygame.sprite.Group()
+enemies.add(enemy)
 projectiles = pygame.sprite.Group()
 # enemies = pygame.sprite.Group()
 
@@ -297,9 +347,11 @@ while True:
     if game_active:
         enemies_spawn()
         draw_game()
+        projectile_collision()
+        player_collision()
     else:
         game_over_screen()
-    
+        # restart_game()
 
     pygame.display.update()
     clock.tick(60)
