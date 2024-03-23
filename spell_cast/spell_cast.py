@@ -274,10 +274,18 @@ def restart_game():
     enemies.empty()
     projectiles.empty()
 
+    initialize_game_start()
+
     screen.blit(cave_background_surf, (0, 0))
     screen.blit(stone_ground_surf, (0, 300))
     all_sprites.draw(screen)
     all_sprites.update()
+
+def initialize_game_start():
+    global mage
+    mage = Mage()
+    all_sprites.add(mage)
+    
     
 # colors
 WHITE = (255, 255, 255)
@@ -314,14 +322,9 @@ spawn_delay = 3000
 last_spawn_time = pygame.time.get_ticks()
 
 # sprites group
-mage = Mage()
-enemy = Enemy(spawn_chance)
 all_sprites = pygame.sprite.Group()
-all_sprites.add(mage)
 enemies = pygame.sprite.Group()
-enemies.add(enemy)
 projectiles = pygame.sprite.Group()
-# enemies = pygame.sprite.Group()
 
 # running game
 while True:
@@ -350,8 +353,9 @@ while True:
         projectile_collision()
         player_collision()
     else:
+        restart_game()
         game_over_screen()
-        # restart_game()
+        
 
     pygame.display.update()
     clock.tick(60)
