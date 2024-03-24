@@ -196,7 +196,33 @@ class Projectile(pygame.sprite.Sprite):
         self.animation_state()
         self.projectile_direction()
         self.destroy() 
-             
+
+class Interface(pygame.sprite.Sprite):
+    def __init__(self, type, x, y):
+        super().__init__()
+        # loading images
+        if type == "heart":
+            heart_full_1 = pygame.image.load("images/heart/full/heart_hp_full1.png")
+            heart_full_2 = pygame.image.load("images/heart/full/heart_hp_full2.png")
+            heart_full_3 = pygame.image.load("images/heart/full/heart_hp_full3.png")
+            heart_full_4 = pygame.image.load("images/heart/full/heart_hp_full4.png")
+            self.frames = [heart_full_1, heart_full_2, heart_full_3, heart_full_4]
+            self.x = x
+            self.y = y
+        
+        self.animation_index = 0
+        self.image = self.frames[self.animation_index]
+        self.rect = self.image.get_rect(midbottom = (self.x, self.y))
+
+    def animation_state(self):
+        self.animation_index += 0.1
+        if self.animation_index >= len(self.frames):
+            self.animation_index = 0
+        self.image = self.frames[int(self.animation_index)]
+
+    def update(self):
+        self.animation_state()
+         
 # functions  
 def game_over_screen():
     # mage model transformation and creating a rectangle for it 
@@ -273,6 +299,7 @@ def restart_game():
     all_sprites.empty()
     enemies.empty()
     projectiles.empty()
+    interface.empty()
 
     initialize_game_start()
 
@@ -282,10 +309,19 @@ def restart_game():
     all_sprites.update()
 
 def initialize_game_start():
-    global mage
+    global mage, heart_1, heart_2, heart_3
     mage = Mage()
+    # on the left
+    heart_1 = Interface("heart", 50, 100)
+    heart_2 = Interface("heart", 120, 100)
+    heart_3 = Interface("heart", 190, 100)
+    # on the right
+    # heart_1 = Interface("heart", 600, 100)
+    # heart_2 = Interface("heart", 670, 100)
+    # heart_3 = Interface("heart", 740, 100)
     all_sprites.add(mage)
-    
+    all_sprites.add(heart_1, heart_2, heart_3)
+    interface.add(heart_1, heart_2, heart_3)
     
 # colors
 WHITE = (255, 255, 255)
@@ -325,6 +361,7 @@ last_spawn_time = pygame.time.get_ticks()
 all_sprites = pygame.sprite.Group()
 enemies = pygame.sprite.Group()
 projectiles = pygame.sprite.Group()
+interface = pygame.sprite.Group()
 
 # running game
 while True:
