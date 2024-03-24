@@ -25,7 +25,7 @@ class Mage(pygame.sprite.Sprite):
         self.player_speed = 3
         self.direction = 1
         self.last_fire_time = 0
-        self.fire_delay = 3000
+        self.fire_delay = 2000
         self.gravity = 0
         self.bottom_pos = 330
 
@@ -285,13 +285,23 @@ def projectile_collision():
                 enemy.kill()
 
 def player_collision():
-    global game_active
+    global game_active, collide_counter
+    hearts = [heart_1, heart_2, heart_3]
 
-    enemy_collide = pygame.sprite.spritecollide(mage, enemies, False)
-
-    if enemy_collide:
-        game_active = False
-
+    for enemy in enemies:
+        enemy_collide = pygame.sprite.spritecollide(mage, enemies, False)
+        if enemy_collide and collide_counter == 0:
+            enemy.kill()
+            heart_3.kill()
+            collide_counter += 1
+        elif enemy_collide and collide_counter == 1:
+            enemy.kill()
+            heart_2.kill()
+            collide_counter += 1
+        elif enemy_collide and collide_counter >= 2:
+            heart_1.kill()
+            game_active = False
+            
 def restart_game():
     cave_background_surf = pygame.image.load("images/cave_background/cave_background.png").convert_alpha()
     stone_ground_surf = pygame.image.load("images/stone_ground/stone_ground.png").convert_alpha()
@@ -354,7 +364,7 @@ bat_1_rect = bat_1_surf.get_rect()
 # enemies randomizer
 enemies_types = ["goblin", "bat", "goblin", "bat"]
 spawn_chance = enemies_types[randint(0, 3)]
-spawn_delay = 3000
+spawn_delay = 2000
 last_spawn_time = pygame.time.get_ticks()
 
 # sprites group
@@ -362,6 +372,9 @@ all_sprites = pygame.sprite.Group()
 enemies = pygame.sprite.Group()
 projectiles = pygame.sprite.Group()
 interface = pygame.sprite.Group()
+
+# variables
+collide_counter = 0
 
 # running game
 while True:
