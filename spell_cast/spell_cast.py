@@ -303,8 +303,12 @@ def player_collision():
             game_active = False
             
 def restart_game():
+    global collide_counter
+
     cave_background_surf = pygame.image.load("images/cave_background/cave_background.png").convert_alpha()
     stone_ground_surf = pygame.image.load("images/stone_ground/stone_ground.png").convert_alpha()
+
+    collide_counter = 0
 
     all_sprites.empty()
     enemies.empty()
